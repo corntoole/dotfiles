@@ -1,0 +1,149 @@
+[[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
+
+#Autojump
+[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+
+#NVM
+# export NVM_DIR="$HOME/.nvm"
+  # . "$(brew --prefix nvm)/nvm.sh"
+
+# Load rbenv automatically by appending
+# the following to ~/.bash_profile:
+
+# eval "$(rbenv init -)"
+
+#export PATH=$PATH:/usr/local/opt/go/libexec/bin
+#export GOPATH=$HOME/bin
+export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
+# export PATH="/usr/local/bin:$PATH"
+
+#export PATH="/usr/local/opt/qt/bin:$PATH"
+export PATH="/usr/local/opt/sqlite/bin:$PATH"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/ctoole/Downloads/google-cloud-sdk/path.bash.inc' ]; then . '/Users/ctoole/Downloads/google-cloud-sdk/path.bash.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/ctoole/Downloads/google-cloud-sdk/completion.bash.inc' ]; then . '/Users/ctoole/Downloads/google-cloud-sdk/completion.bash.inc'; fi
+
+if echo "$-" | grep i > /dev/null; then
+	[[ -s "/Users/ctoole/.gvm/scripts/gvm" ]] && source "/Users/ctoole/.gvm/scripts/gvm";
+	# gvm use go1.10.7;
+	export GOPATH=${HOME}/Zing;
+	export PATH=${GOPATH}/bin:${PATH};
+fi
+alias dc="docker compose"
+complete -F _docker_compose dc
+source /usr/local/etc/bash_completion.d/docker-compose
+source ${HOME}/git-completion.bash
+source /usr/local/etc/bash_completion.d/deno.bash
+export PATH="/usr/local/opt/openjdk/bin:$PATH"
+complete -C /Users/ctoole/Zing/bin/bitcomplete bit
+
+# n node version manager
+export N_PREFIX=${HOME}/sw
+
+# .aliaes
+alias git="hub"
+alias vim="nvim"
+
+# .functions
+# `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
+# the `.git` directory, listing directories first. The output gets piped into
+# `less` with options to preserve color and line numbers, unless the output is
+# small enough for one screen.
+function tre() {
+  tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
+}
+
+# Load .env file into shell session for environment variables
+function envup() {
+  if [ -f .env ]; then
+    export $(sed '/^ *#/ d' .env)
+  else
+    echo 'No .env file found' 1>&2
+    return 1
+  fi
+}
+
+# Unload .env file from shell session for environment variables
+function envdown() {
+  unset $(grep -v '^#' .env | sed -E 's/(.*)=.*/\1/' | xargs)
+}
+
+function envupwithprefix() {
+  if [ -f $1 ]; then
+    export $(sed 's/^/'"$2"'_/' $1)
+  else
+    echo 'File $1 not found' 1>&2
+    return 1
+  fi
+}
+
+function envdownwithprefix() {
+  unset $(grep -v '^#' $1 | sed -E 's/(.*)=.*/'"$2"'_\1/' | xargs)
+}
+
+# Convert .mov to gif using ffmpeg
+# via https://gist.github.com/baumandm/1dba6a055356d183bbf7
+function movtogif () {
+  tempfile=.mov-to-gif-$(date +"%s").png
+  ffmpeg -v quiet -stats -y -i $1 -vf fps=10,palettegen $tempfile
+  ffmpeg -v quiet -stats -i $1 -i $tempfile -filter_complex "fps=10,paletteuse" "${1%.mov}.gif"
+  rm $tempfile
+}
+
+function btemu () {
+  CLOUDSKD_CORE_PROJECT=zing-dev gcloud beta emulators bigtable start --host-port=0.0.0.0:8086
+}
+
+epochtorfc3339 ()
+{
+    RFC3339_FORMAT="+%FT%T:::%z"
+    EPOCH=$(echo $@ | sed -n "s/.*\([0-9]\{10\}\).*/\1/p");
+    if date --version >/dev/null 2>/dev/null; then
+        # Linux
+        date ${RFC3339_FORMAT} -d "1970-01-01 UTC ${EPOCH} seconds"
+        #date -d @${EPOCH} --rfc-3339=seconds
+    else
+        # OS X/BSD
+        date -r ${EPOCH} ${RFC3339_FORMAT}
+    fi
+}
+
+randstr () {
+  N=16
+  if [ -n "$1" ]; then
+    N=$1
+  fi
+  cat /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | fold -w $N | head -n 1
+}
+
+ginkgocov () {
+  ginkgocmd=$(which ginkgo)
+  pkg="."
+  if [ -n "$1" ]; then
+    pkg=$1
+  fi
+  ${ginkgocmd} -r -v -mod vendor -cover -covermode=count --skipPackage vendor -tags integration ${pkg}
+}
+
+mkcoveragereport () {
+  gocmd=$(which go)
+  gocovmergecmd=$(which gocovmerge)
+  gocovcmd=$(which gocov)
+  gocovxmlcmd=$(which gocov-xml)
+  ${gocovmergecmd} $(find . -name \*.coverprofile) > coverage/profile.out
+  ${gocmd} tool cover -html=coverage/profile.out -o coverage/index.html
+  ${gocovcmd} convert coverage/profile.out | ${gocovxmlcmd} > coverage/coverage.xml
+}
+
+## brew.sh
+
+# Install corntoole's commonly used binaries
+# brew cask install google-chrome
+brew cask install alfred
+brew cask install spectacle
+brew cask install bartender
+brew cask install butler
+brew cask install firefox
