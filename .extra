@@ -32,16 +32,16 @@ if echo "$-" | grep i > /dev/null; then
 	export GOPATH=${HOME}/Zing;
 	export PATH=${GOPATH}/bin:${PATH};
 fi
-alias dc="docker compose"
-complete -F _docker_compose dc
-source /usr/local/etc/bash_completion.d/docker-compose
-source ${HOME}/git-completion.bash
-source /usr/local/etc/bash_completion.d/deno.bash
-export PATH="/usr/local/opt/openjdk/bin:$PATH"
-complete -C /Users/ctoole/Zing/bin/bitcomplete bit
+#alias dc="docker compose"
+#complete -F _docker_compose dc
+#source /usr/local/etc/bash_completion.d/docker-compose
+#source ${HOME}/git-completion.bash
+#source /usr/local/etc/bash_completion.d/deno.bash
+#export PATH="/usr/local/opt/openjdk/bin:$PATH"
+#complete -C /Users/ctoole/Zing/bin/bitcomplete bit
 
 # n node version manager
-export N_PREFIX=${HOME}/sw
+#export N_PREFIX=${HOME}/sw
 
 # .aliaes
 alias git="hub"
@@ -142,8 +142,20 @@ mkcoveragereport () {
 
 # Install corntoole's commonly used binaries
 # brew cask install google-chrome
-brew cask install alfred
-brew cask install spectacle
-brew cask install bartender
-brew cask install butler
-brew cask install firefox
+# brew cask install alfred
+# brew cask install spectacle
+# brew cask install bartender
+# brew cask install butler
+# brew cask install firefox
+
+eval "$(/Users/ctoole/.local/bin/mise activate bash)"
+
+# . "$HOME/.cargo/env"
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/ctoole/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
+eval "$(/Users/ctoole/.local/bin/mise activate bash)"
+
+[[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
+eval "$(atuin init bash)"
