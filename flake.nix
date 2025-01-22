@@ -173,6 +173,7 @@
           home-manager.useUserPackages = true;
           home-manager.verbose = true;
           home-manager.users.ctoole = homeconfig;
+          home-manager.backupFileExtension = "backup";
         }
       ];
     };
