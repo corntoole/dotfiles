@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/0.1";
     nix-darwin.url = "github:LnL7/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     home-manager = {
@@ -11,13 +12,14 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager }:
+  outputs = inputs@{ self, nixpkgs, determinate, nix-darwin, home-manager }:
   let
     configuration = { pkgs, ... }: {
       # List packages installed in system profile. To search by name, run:
       # $ nix-env -qaP | grep wget
       environment.systemPackages =
         [ pkgs.vim
+          pkgs.nixd
         ];
 
       # Necessary for using flakes on this system.
@@ -165,6 +167,7 @@
       programs.home-manager.enable = true;
 
       home.packages = with pkgs; [];
+      programs.bash.enable = true;
 
       home.sessionVariables = {
         EDITOR = "vim";
@@ -176,6 +179,7 @@
     # $ darwin-rebuild build --flake .#simple
     darwinConfigurations."aus-2226-ml" = nix-darwin.lib.darwinSystem {
       modules = [
+        determinate.darwinModules.default
         configuration
         home-manager.darwinModules.home-manager {
           home-manager.useGlobalPkgs = true;
