@@ -14,11 +14,11 @@
 
 #export PATH=$PATH:/usr/local/opt/go/libexec/bin
 #export GOPATH=$HOME/bin
-export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
+#export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
 # export PATH="/usr/local/bin:$PATH"
 
 #export PATH="/usr/local/opt/qt/bin:$PATH"
-export PATH="/usr/local/opt/sqlite/bin:$PATH"
+#export PATH="/usr/local/opt/sqlite/bin:$PATH"
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/ctoole/Downloads/google-cloud-sdk/path.bash.inc' ]; then . '/Users/ctoole/Downloads/google-cloud-sdk/path.bash.inc'; fi
@@ -26,12 +26,12 @@ if [ -f '/Users/ctoole/Downloads/google-cloud-sdk/path.bash.inc' ]; then . '/Use
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/ctoole/Downloads/google-cloud-sdk/completion.bash.inc' ]; then . '/Users/ctoole/Downloads/google-cloud-sdk/completion.bash.inc'; fi
 
-if echo "$-" | grep i > /dev/null; then
-	[[ -s "/Users/ctoole/.gvm/scripts/gvm" ]] && source "/Users/ctoole/.gvm/scripts/gvm";
-	# gvm use go1.10.7;
-	export GOPATH=${HOME}/Zing;
-	export PATH=${GOPATH}/bin:${PATH};
-fi
+# if echo "$-" | grep i > /dev/null; then
+# 	[[ -s "/Users/ctoole/.gvm/scripts/gvm" ]] && source "/Users/ctoole/.gvm/scripts/gvm";
+# 	# gvm use go1.10.7;
+# 	export GOPATH=${HOME}/Zing;
+# 	export PATH=${GOPATH}/bin:${PATH};
+# fi
 #alias dc="docker compose"
 #complete -F _docker_compose dc
 #source /usr/local/etc/bash_completion.d/docker-compose
@@ -148,13 +148,8 @@ mkcoveragereport () {
 # brew cask install butler
 # brew cask install firefox
 
-eval "$(/Users/ctoole/.local/bin/mise activate bash)"
-
 # . "$HOME/.cargo/env"
 
-### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="/Users/ctoole/.rd/bin:$PATH"
-### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 eval "$(/Users/ctoole/.local/bin/mise activate bash)"
 
 [[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh

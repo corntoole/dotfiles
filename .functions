@@ -352,5 +352,5 @@ function epoch_in_millis () {
 }
 
 function dotfiles {
-   /usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME $@
+   /usr/bin/git --git-dir=/opt/ctoole/dotfiles --work-tree=$HOME $@
 }
