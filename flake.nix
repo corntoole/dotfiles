@@ -5,9 +5,13 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-darwin.url = "github:LnL7/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ self, nix-darwin, nixpkgs }:
+  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager }:
   let
     configuration = { pkgs, ... }: {
       # List packages installed in system profile. To search by name, run:
@@ -32,6 +36,11 @@
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
       security.pam.enableSudoTouchIdAuth = true;
+
+      users.users.ctoole = {
+        name = "ctoole";
+        home = "/Users/ctoole";
+      };
 
       homebrew = {
         enable = true;
@@ -148,12 +157,33 @@
         };
       };
     };
+    homeconfig = {pkgs, ...}: {
+      # this is internal compatibility configuration
+      # for home-manager, don't change this!
+      home.stateVersion = "23.05";
+      # Let home-manager install and manage itself.
+      programs.home-manager.enable = true;
+
+      home.packages = with pkgs; [];
+
+      home.sessionVariables = {
+        EDITOR = "vim";
+      };
+    };
   in
   {
     # Build darwin flake using:
     # $ darwin-rebuild build --flake .#simple
     darwinConfigurations."aus-2226-ml" = nix-darwin.lib.darwinSystem {
-      modules = [ configuration ];
+      modules = [
+        configuration
+        home-manager.darwinModules.home-manager {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.verbose = true;
+          home-manager.users.ctoole = homeconfig;
+        }
+      ];
     };
   };
 }
