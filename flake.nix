@@ -1,5 +1,5 @@
 {
-  description = "Example nix-darwin system flake";
+  description = "My System Configuration";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -32,6 +32,121 @@
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
       security.pam.enableSudoTouchIdAuth = true;
+
+      homebrew = {
+        enable = true;
+
+        taps = [
+          "bufbuild/buf"
+          "homebrew/bundle"
+          #"homebrew/services"
+          "jesseduffield/lazydocker"
+          #"jorgelbg/tap"
+          #"txn2/tap"
+          #"withgraphite/tap"
+        ];
+
+        brews = [
+          "asciinema"
+          #"atuin", restart_service: :changed
+          {
+            name = "atuin";
+            restart_service = "changed";
+          }
+          "autojump"
+          #"bash"
+          #"bash-completion@2"
+          #"bat"
+          "cfssl"
+          #"cmake"
+          #"coreutils"
+          "fd"
+          "fzf"
+          "gawk"
+          "gh"
+          #"git"
+          "git-branchless"
+          #"gitui"
+          #"glow"
+          "gnutls"
+          "gnupg"
+          #"go"
+          #"golangci-lint"
+          #"grpc"
+          #"helix"
+          #"htop"
+          #"httpie", link: false
+          "hub"
+          "jless"
+          "jq"
+          "k9s"
+          "kubectx"
+          "kustomize"
+          "lazygit"
+          #"llvm@17"
+          #"make"
+          "mas"
+          #"node"
+          #"mongosh"
+          #"tree-sitter"
+          #"neovim"
+          "pinentry-mac"
+          #"protoc-gen-go"
+          #"protoc-gen-go-grpc"
+          #"ripgrep"
+          #"rust"
+          #"stgit"
+          #"tree"
+          #"wget"
+          #"yarn"
+          #"yq"
+          "zellij"
+          #"bradleyjkemp/formulae/grpc-tools"
+          "bufbuild/buf/buf"
+          #"grpcmd/tap/grpcmd"
+          "jesseduffield/lazydocker/lazydocker"
+          "jorgelbg/tap/pinentry-touchid"
+          #"withgraphite/tap/graphite"
+        ];
+
+        casks = [
+          "1password"
+          "1password-cli"
+          "alfred"
+          "arc"
+          "caffeine"
+          #"font-hack-nerd-font"
+          #"font-monaspace"
+          "gpg-suite-pinentry"
+          "httpie"
+          "jetbrains-toolbox"
+          "kitty"
+          #"libreoffice"
+          "licecap"
+          "logi-options+"
+          "logseq"
+          "mongodb-compass"
+          "orbstack"
+          #"rancher"
+          "rectangle"
+          "viscosity"
+          "warp"
+          "zed"
+          "zoom"
+        ];
+
+        masApps = {
+         "1Password for Safari" = 1569813296;
+         "Boop" = 1518425043;
+         "Bumpr" = 1166066070;
+         "Dato" = 1470584107;
+         "Pastebot" = 1179623856;
+         #"Session Pal" = 1515213004;
+         "Slack" = 803453959;
+         "Soulver 3" = 1508732804;
+         "Vinegar" = 1591303229;
+        };
+      };
     };
   in
   {
