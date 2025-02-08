@@ -71,6 +71,7 @@
           "cfssl"
           #"cmake"
           #"coreutils"
+          "difftastic"
           "fd"
           "fzf"
           "gawk"
@@ -163,7 +164,7 @@
   in
   {
     # Build darwin flake using:
-    # $ darwin-rebuild build --flake .#simple
+    # $ darwin-rebuild build --flake .#aus-2226-ml
     darwinConfigurations."aus-2226-ml" = nix-darwin.lib.darwinSystem {
       modules = [
         determinate.darwinModules.default

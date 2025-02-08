@@ -351,6 +351,6 @@ function epoch_in_millis () {
   $date_cmd --date "${decr}" +%s.%3N | tr -d .
 }
 
-function dotfiles {
+function dotfiles () {
    /usr/bin/git --git-dir=/opt/ctoole/dotfiles --work-tree=$HOME $@
 }
