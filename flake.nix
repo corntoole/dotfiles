@@ -37,12 +37,7 @@
 
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
-      security.pam.enableSudoTouchIdAuth = true;
 
-      users.users.ctoole = {
-        name = "ctoole";
-        home = "/Users/ctoole";
-      };
 
       homebrew = {
         enable = true;
@@ -161,6 +156,11 @@
       };
     };
     homeconfig = import ./nix_modules/home/home.nix;
+    globalModulesMacos =  {
+      # The platform the configuration will be used on.
+      nixpkgs.hostPlatform = "x86_64-darwin";
+      security.pam.enableSudoTouchIdAuth = true;
+    };
   in
   {
     # Build darwin flake using:
@@ -169,6 +169,7 @@
       modules = [
         determinate.darwinModules.default
         configuration
+        ( globalModulesMacos // ( import ./nix_modules/hosts/aus-2226-ml/configuration.nix ) )
         home-manager.darwinModules.home-manager {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
