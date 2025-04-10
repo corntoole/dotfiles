@@ -65,10 +65,6 @@ if [ -f '${HOME}/.local/google-cloud-sdk/completion.bash.inc' ]; then . '${HOME}
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.bash 2>/dev/null || :
 
-### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="${HOME}/.rd/bin:$PATH"
-### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
-
 # pnpm
 export PNPM_HOME="${HOME}/Library/pnpm"
 case ":$PATH:" in
@@ -79,6 +75,11 @@ esac
 #
 # test
 
+# TODO: replace global exports like this with something with direnv
+export GOPATH=${HOME}/Zing
+export PATH=${GOPATH}/bin:${PATH}
+export PATH=${HOME}/.local/google-cloud-sdk/bin:$PATH
+
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+export SDKMAN_DIR="${HOME}/.sdkman"
+[[ -s "${HOME}/.sdkman/bin/sdkman-init.sh" ]] && source "${HOME}/.sdkman/bin/sdkman-init.sh"
