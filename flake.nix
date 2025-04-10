@@ -38,6 +38,10 @@
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
 
+      # Determinate uses its own daemon to manage the Nix installation that
+      # conflicts with nix-darwin’s native Nix management.
+      # To turn off nix-darwin’s management of the Nix installation, set:
+      nix.enable = false;
 
       homebrew = {
         enable = true;
@@ -159,7 +163,6 @@
     globalModulesMacos =  {
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
-      security.pam.enableSudoTouchIdAuth = true;
     };
   in
   {
@@ -167,7 +170,7 @@
     # $ darwin-rebuild build --flake .#aus-2226-ml
     darwinConfigurations."aus-2226-ml" = nix-darwin.lib.darwinSystem {
       modules = [
-        determinate.darwinModules.default
+        #determinate.darwinModules.default
         configuration
         ( globalModulesMacos // ( import ./nix_modules/hosts/aus-2226-ml/configuration.nix ) )
         home-manager.darwinModules.home-manager {
