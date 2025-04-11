@@ -1,4 +1,4 @@
-{pkgs, ...}:
+{ lib, pkgs, ...}:
 {
   # this is internal compatibility configuration
   # for home-manager, don't change this!
@@ -41,7 +41,7 @@
   programs.bash.enable = true;
 
   programs.bash = {
-    bashrcExtra = ''
+    bashrcExtra = lib.mkDefault ''
         [ -n "$PS1" ] && source ~/.bashrc_extra
     '';
   };
