@@ -38,6 +38,9 @@
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
 
+      nix = {
+        enable = false;
+      };
 
       homebrew = {
         enable = true;
@@ -159,7 +162,7 @@
     globalModulesMacos =  {
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
-      security.pam.enableSudoTouchIdAuth = true;
+      security.pam.services.sudo_local.touchIdAuth = true;
     };
   in
   {
