@@ -150,7 +150,7 @@ mkcoveragereport () {
 
 # . "$HOME/.cargo/env"
 
-eval "$(${HOME}/.local/bin/mise activate bash)"
+[[ -f ${HOME}/.local/bin/mise ]] && eval "$(${HOME}/.local/bin/mise activate bash)"
 
 [[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
 eval "$(atuin init bash)"

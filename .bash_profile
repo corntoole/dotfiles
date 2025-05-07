@@ -23,7 +23,7 @@ if [ -d "/opt/homebrew/sbin" ]; then
 fi
 
 if which brew &>/dev/null; then
-    eval \"$(/opt/homebrew/bin/brew shellenv)\"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
 # Add `~/bin` to the `$PATH`
