@@ -212,3 +212,9 @@ dist
 .git/
 vendor/
 
+# from aus-
+.bash_profile_v2
+Brewfile-aus2226-2025-01-21
+home-manager
+home-manager-1-link
+result
