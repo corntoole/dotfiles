@@ -26,31 +26,23 @@ if which brew &>/dev/null; then
 fi
 
 # add /usr/local/bin to PATH if it's not already there
-if [ "${PATH#*/usr/local/bin}" != "${PATH}" ]; then
-    echo "Path already contains /usr/local/bin"
-else
-    export PATH=/usr/local/bin:${PATH}
-fi
+append_to_path /usr/local/bin
 
 # add /usr/local/sbin to PATH if it's not already there
-if [ "${PATH#*/usr/local/sbin}" != "${PATH}" ]; then
-    echo "Path already contains /usr/local/sbin"
-else
-    export PATH=/usr/local/sbin:${PATH}
+append_to_path /usr/local/sbin
+
+# Add `~/bin`, et. al. to the `$PATH`
+append_to_path ${HOME}/bin
+append_to_path ${HOME}/sw/bin
+append_to_path ${HOME}/.local/bin
+
+if [ -d "${HOME}/Zing/bin" ]; then
+    append_to_path ${HOME}/Zing/bin
 fi
 
-# Add /opt/homebrew/bin to PATH if it exists
-if [ -d "/opt/homebrew/bin" ]; then
-    export PATH=/opt/homebrew/bin:${PATH}
+if [ -d "/run/current-sytem/sw/bin" ]; then
+    prepend_to_path /run/current-system/sw/bin
 fi
-
-# Add /opt/homebrew/sbin to PATH if it exists
-if [ -d "/opt/homebrew/sbin" ]; then
-    export PATH=/opt/homebrew/sbin:${PATH}
-fi
-# Add `~/bin` to the `$PATH`
-export PATH=${HOME}/sw/bin:${HOME}/bin:${HOME}/.local/bin:${PATH}
-export PATH=/run/current-system/sw/bin:$PATH
 
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
