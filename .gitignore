@@ -150,6 +150,7 @@ web_modules/
 #.env.test.local
 #.env.production.local
 #.env.local
+.env*.keys
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -210,10 +211,3 @@ dist
 .svelte-kit
 
 .git/
-vendor/
-
-Brewfile-2024-01-02-1637
-cfg.sh
-exclude-files-home.txt
-result
-uninstall.sh
