@@ -175,7 +175,7 @@
       # $ darwin-rebuild build --flake .#aus-2226-ml
       "aus-2226-ml" = nix-darwin.lib.darwinSystem {
         modules = [
-          determinate.darwinModules.default
+          # determinate.darwinModules.default
           configuration
           ( globalModulesMacos // ( import ./nix_modules/hosts/aus-2226-ml/configuration.nix ) )
           home-manager.darwinModules.home-manager {
