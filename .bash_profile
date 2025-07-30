@@ -1,3 +1,25 @@
+append_to_path() {
+    # Use a default value of 'PATH' for the variable name
+    local var_name=${2:-PATH}
+
+    # Use 'declare -n' to create a nameref, which makes the local variable
+    # an alias for the global variable passed in, allowing modification.
+    declare -n path_var=$var_name
+
+    # Check if the directory is already in the specified variable
+    if [[ ":${path_var}:" != *":$1:"* ]]; then
+        export $var_name="${path_var}:${1}"
+    fi
+}
+
+prepend_to_path() {
+    local var_name=${2:-PATH}
+    declare -n path_var=$var_name
+
+    if [[ ":${path_var}:" != *":$1:"* ]]; then
+        export $var_name="${1}:${path_var}"
+    fi
+}
 
 if which brew &>/dev/null; then
     eval "$(brew shellenv)"
