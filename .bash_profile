@@ -1,3 +1,8 @@
+
+if which brew &>/dev/null; then
+    eval "$(brew shellenv)"
+fi
+
 # add /usr/local/bin to PATH if it's not already there
 if [ "${PATH#*/usr/local/bin}" != "${PATH}" ]; then
     echo "Path already contains /usr/local/bin"
@@ -21,11 +26,6 @@ fi
 if [ -d "/opt/homebrew/sbin" ]; then
     export PATH=/opt/homebrew/sbin:${PATH}
 fi
-
-if which brew &>/dev/null; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
-
 # Add `~/bin` to the `$PATH`
 export PATH=${HOME}/sw/bin:${HOME}/bin:${HOME}/.local/bin:${PATH}
 export PATH=/run/current-system/sw/bin:$PATH
