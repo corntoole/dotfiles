@@ -354,3 +354,9 @@ function epoch_in_millis () {
 function dotfiles () {
    /usr/bin/git --git-dir=/opt/ctoole/dotfiles --work-tree=$HOME $@
 }
+
+attach_and_run() {
+  docker compose -f docker-compose.test.yml run --rm \
+    --volume $PWD:/workspace:rw --volume /var/run/docker.sock:/var/run/docker.sock \
+    --env LOCAL_USER_ID=$(id -g) --workdir /workspace test "$@"
+}
