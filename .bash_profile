@@ -38,6 +38,7 @@ append_to_path ${HOME}/.local/bin
 
 if [ -d "${HOME}/Zing/bin" ]; then
     append_to_path ${HOME}/Zing/bin
+    export GOPATH=${HOME}/Zing
 fi
 
 if [ -d "/run/current-sytem/sw/bin" ]; then
