@@ -98,10 +98,10 @@ complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes Syste
 
 # TODO: factor out env var for gcloud SDK root
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '${HOME}/.local/google-cloud-sdk/path.bash.inc' ]; then . '${HOME}/.local/google-cloud-sdk/path.bash.inc'; fi
+[[ -f "${HOME}/.local/google-cloud-sdk/path.bash.inc" ]] && . ${HOME}/.local/google-cloud-sdk/path.bash.inc
 
 # The next line enables shell command completion for gcloud.
-if [ -f '${HOME}/.local/google-cloud-sdk/completion.bash.inc' ]; then . '${HOME}/.local/google-cloud-sdk/completion.bash.inc'; fi
+[[ -f "${HOME}/.local/google-cloud-sdk/completion.bash.inc" ]] && . ${HOME}/.local/google-cloud-sdk/completion.bash.inc
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.bash 2>/dev/null || :
