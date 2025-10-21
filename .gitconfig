@@ -184,6 +184,16 @@
 
 	insteadOf = "gist:"
 
+[url "git@codeberg.org:"]
+
+	insteadOf = https://codeberg.org/
+	pushInsteadOf = "codeborg:"
+	pushInsteadOf = "git://codeberg.org/"
+
+[url "git://codeberg.org/"]
+
+	insteadOf = "codeberg:"
+
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
