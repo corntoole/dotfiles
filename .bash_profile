@@ -1,34 +1,49 @@
-# add /usr/local/bin to PATH if it's not already there
-if [ "${PATH#*/usr/local/bin}" != "${PATH}" ]; then
-    echo "Path already contains /usr/local/bin"
-else
-    export PATH=/usr/local/bin:${PATH}
-fi
+append_to_path() {
+    # Use a default value of 'PATH' for the variable name
+    local var_name=${2:-PATH}
 
-# add /usr/local/sbin to PATH if it's not already there
-if [ "${PATH#*/usr/local/sbin}" != "${PATH}" ]; then
-    echo "Path already contains /usr/local/sbin"
-else
-    export PATH=/usr/local/sbin:${PATH}
-fi
+    # Use 'declare -n' to create a nameref, which makes the local variable
+    # an alias for the global variable passed in, allowing modification.
+    declare -n path_var=$var_name
 
-# Add /opt/homebrew/bin to PATH if it exists
-if [ -d "/opt/homebrew/bin" ]; then
-    export PATH=/opt/homebrew/bin:${PATH}
-fi
+    # Check if the directory is already in the specified variable
+    if [[ ":${path_var}:" != *":$1:"* ]]; then
+        export $var_name="${path_var}:${1}"
+    fi
+}
 
-# Add /opt/homebrew/sbin to PATH if it exists
-if [ -d "/opt/homebrew/sbin" ]; then
-    export PATH=/opt/homebrew/sbin:${PATH}
-fi
+prepend_to_path() {
+    local var_name=${2:-PATH}
+    declare -n path_var=$var_name
+
+    if [[ ":${path_var}:" != *":$1:"* ]]; then
+        export $var_name="${1}:${path_var}"
+    fi
+}
 
 if which brew &>/dev/null; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    eval "$(brew shellenv)"
 fi
 
-# Add `~/bin` to the `$PATH`
-export PATH=${HOME}/sw/bin:${HOME}/bin:${HOME}/.local/bin:${PATH}
-export PATH=/run/current-system/sw/bin:$PATH
+# add /usr/local/bin to PATH if it's not already there
+append_to_path /usr/local/bin
+
+# add /usr/local/sbin to PATH if it's not already there
+append_to_path /usr/local/sbin
+
+# Add `~/bin`, et. al. to the `$PATH`
+append_to_path ${HOME}/bin
+append_to_path ${HOME}/sw/bin
+append_to_path ${HOME}/.local/bin
+
+if [ -d "${HOME}/Zing/bin" ]; then
+    append_to_path ${HOME}/Zing/bin
+    export GOPATH=${HOME}/Zing
+fi
+
+if [ -d "/run/current-sytem/sw/bin" ]; then
+    prepend_to_path /run/current-system/sw/bin
+fi
 
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
@@ -84,17 +99,13 @@ complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes Syste
 
 # TODO: factor out env var for gcloud SDK root
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '${HOME}/.local/google-cloud-sdk/path.bash.inc' ]; then . '${HOME}/.local/google-cloud-sdk/path.bash.inc'; fi
+[[ -f "${HOME}/.local/google-cloud-sdk/path.bash.inc" ]] && . ${HOME}/.local/google-cloud-sdk/path.bash.inc
 
 # The next line enables shell command completion for gcloud.
-if [ -f '${HOME}/.local/google-cloud-sdk/completion.bash.inc' ]; then . '${HOME}/.local/google-cloud-sdk/completion.bash.inc'; fi
+[[ -f "${HOME}/.local/google-cloud-sdk/completion.bash.inc" ]] && . ${HOME}/.local/google-cloud-sdk/completion.bash.inc
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.bash 2>/dev/null || :
-
-### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="${HOME}/.rd/bin:$PATH"
-### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 
 # pnpm
 export PNPM_HOME="${HOME}/Library/pnpm"

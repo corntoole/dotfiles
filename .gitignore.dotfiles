@@ -1,0 +1,11 @@
+# a gitignore file for this working copy/worktree
+
+Brewfile-*
+Brewfile.*
+cfg.sh
+exclude-files-home.txt
+result
+uninstall.sh
+.bash_profile_v2
+home-manager
+home-manager-1-link
