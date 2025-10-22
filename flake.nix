@@ -43,7 +43,7 @@
       };
 
       homebrew = {
-        enable = true;
+        enable = false;
 
         taps = [
           "bufbuild/buf"
@@ -63,6 +63,7 @@
           #"bash"
           #"bash-completion@2"
           #"bat"
+          "cargo-binstall"
           "cfssl"
           #"cmake"
           #"coreutils"

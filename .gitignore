@@ -212,3 +212,8 @@ dist
 .git/
 vendor/
 
+Brewfile-2024-01-02-1637
+cfg.sh
+exclude-files-home.txt
+result
+uninstall.sh
