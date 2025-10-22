@@ -21,8 +21,48 @@ prepend_to_path() {
     fi
 }
 
-if which brew &>/dev/null; then
-    eval "$(brew shellenv)"
+# Initialize BREW_CMD to an empty string
+BREW_CMD=""
+
+# --- macOS Checks ---
+
+# 1. Check for Apple Silicon/ARM-based Mac (Default path)
+if [ -x "/opt/homebrew/bin/brew" ]; then
+  BREW_CMD="/opt/homebrew/bin/brew"
+fi
+
+# 2. Check for Intel-based Mac (Default path)
+if [ -z "$BREW_CMD" ] && [ -x "/usr/local/bin/brew" ]; then
+  BREW_CMD="/usr/local/bin/brew"
+fi
+
+# --- Linuxbrew Check ---
+
+# 3. Check for Linuxbrew (Default path in a user's home directory)
+if [ -z "$BREW_CMD" ] && [ -x "$HOME/.linuxbrew/bin/brew" ]; then
+  BREW_CMD="$HOME/.linuxbrew/bin/brew"
+fi
+
+# --- Fallback to standard PATH search ---
+
+# 4. If not found in default locations, try 'which' (Relies on PATH being set correctly)
+if [ -z "$BREW_CMD" ]; then
+  # which returns the path to the executable or nothing if not found
+  BREW_CMD=$(which brew 2>/dev/null)
+fi
+
+# --- Output and Conclusion ---
+
+if [ -n "$BREW_CMD" ]; then
+  # To make the variable available in the calling shell,
+  # you would typically 'source' this script, or the
+  # variable assignment would be done in your shell's
+  # profile script (e.g., .bashrc, .zshrc).
+  eval "$(${BREW_CMD} shellenv)"
+  unset BREW_CMD
+else
+  echo "❌ Homebrew command 'brew' was not found in common locations or in the PATH."
+  echo "Homebrew was not initialized"
 fi
 
 # add /usr/local/bin to PATH if it's not already there
