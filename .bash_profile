@@ -1,24 +1,24 @@
 append_to_path() {
-    # Use a default value of 'PATH' for the variable name
-    local var_name=${2:-PATH}
+  # Use a default value of 'PATH' for the variable name
+  local var_name=${2:-PATH}
 
-    # Use 'declare -n' to create a nameref, which makes the local variable
-    # an alias for the global variable passed in, allowing modification.
-    declare -n path_var=$var_name
+  # Use 'declare -n' to create a nameref, which makes the local variable
+  # an alias for the global variable passed in, allowing modification.
+  declare -n path_var=$var_name
 
-    # Check if the directory is already in the specified variable
-    if [[ ":${path_var}:" != *":$1:"* ]]; then
-        export $var_name="${path_var}:${1}"
-    fi
+  # Check if the directory is already in the specified variable
+  if [[ ":${path_var}:" != *":$1:"* ]]; then
+    export $var_name="${path_var}:${1}"
+  fi
 }
 
 prepend_to_path() {
-    local var_name=${2:-PATH}
-    declare -n path_var=$var_name
+  local var_name=${2:-PATH}
+  declare -n path_var=$var_name
 
-    if [[ ":${path_var}:" != *":$1:"* ]]; then
-        export $var_name="${1}:${path_var}"
-    fi
+  if [[ ":${path_var}:" != *":$1:"* ]]; then
+    export $var_name="${1}:${path_var}"
+  fi
 }
 
 # Initialize BREW_CMD to an empty string
@@ -77,19 +77,19 @@ append_to_path ${HOME}/sw/bin
 append_to_path ${HOME}/.local/bin
 
 if [ -d "${HOME}/Zing/bin" ]; then
-    append_to_path ${HOME}/Zing/bin
-    export GOPATH=${HOME}/Zing
+  append_to_path ${HOME}/Zing/bin
+  export GOPATH=${HOME}/Zing
 fi
 
 if [ -d "/run/current-sytem/sw/bin" ]; then
-    prepend_to_path /run/current-system/sw/bin
+  prepend_to_path /run/current-system/sw/bin
 fi
 
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
 # * ~/.extra can be used for other settings you don’t want to commit.
 for file in ~/.{path,bash_prompt,exports,aliases,functions,extra}; do
-        [ -r "$file" ] && [ -f "$file" ] && source "$file"
+  [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
 
@@ -106,7 +106,7 @@ shopt -s cdspell
 # * `autocd`, e.g. `**/qux` will enter `./foo/bar/baz/qux`
 # * Recursive globbing, e.g. `echo **/*.txt`
 for option in autocd globstar; do
-        shopt -s "$option" 2>/dev/null
+  shopt -s "$option" 2>/dev/null
 done
 
 # Add tab completion for many Bash commands
@@ -119,7 +119,7 @@ done
 
 # Enable tab completion for `g` by marking it as an alias for `git`
 if type _git &>/dev/null && [ -f /usr/local/etc/bash_completion.d/git-completion.bash ]; then
-        complete -o default -o nospace -F _git g
+  complete -o default -o nospace -F _git g
 fi
 
 # Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards
@@ -135,8 +135,6 @@ complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes Syste
 #Autojump
 [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
 
-
-
 # TODO: factor out env var for gcloud SDK root
 # The next line updates PATH for the Google Cloud SDK.
 [[ -f "${HOME}/.local/google-cloud-sdk/path.bash.inc" ]] && . ${HOME}/.local/google-cloud-sdk/path.bash.inc
@@ -150,8 +148,8 @@ source ~/.orbstack/shell/init.bash 2>/dev/null || :
 # pnpm
 export PNPM_HOME="${HOME}/Library/pnpm"
 case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
+*":$PNPM_HOME:"*) ;;
+*) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
 #
