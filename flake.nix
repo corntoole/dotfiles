@@ -14,7 +14,7 @@
 
   outputs = inputs@{ self, nixpkgs, determinate, nix-darwin, home-manager }:
   let
-    configuration = { pkgs, ... }: {
+    configuration = { lib, pkgs, ... }: {
       # List packages installed in system profile. To search by name, run:
       # $ nix-env -qaP | grep wget
       environment.systemPackages =
@@ -36,8 +36,11 @@
       system.stateVersion = 5;
 
       # The platform the configuration will be used on.
-      nixpkgs.hostPlatform = "x86_64-darwin";
+      nixpkgs.hostPlatform = lib.mkDefault "x86_64-darwin";
 
+      nix = {
+        enable = false;
+      };
 
       homebrew = {
         enable = true;
@@ -45,7 +48,7 @@
         taps = [
           "bufbuild/buf"
           "homebrew/bundle"
-          #"homebrew/services"
+          "homebrew/services"
           "jesseduffield/lazydocker"
           #"jorgelbg/tap"
           #"txn2/tap"
@@ -55,10 +58,7 @@
         brews = [
           "asciinema"
           #"atuin", restart_service: :changed
-          {
-            name = "atuin";
-            restart_service = "changed";
-          }
+          "atuin"
           "autojump"
           #"bash"
           #"bash-completion@2"
@@ -100,8 +100,8 @@
           "pinentry-mac"
           #"protoc-gen-go"
           #"protoc-gen-go-grpc"
-          #"ripgrep"
-          #"rust"
+          "ripgrep"
+          "rust"
           #"stgit"
           #"tree"
           #"wget"
@@ -112,7 +112,7 @@
           "bufbuild/buf/buf"
           #"grpcmd/tap/grpcmd"
           "jesseduffield/lazydocker/lazydocker"
-          "jorgelbg/tap/pinentry-touchid"
+          # "jorgelbg/tap/pinentry-touchid"
           #"withgraphite/tap/graphite"
         ];
 
@@ -124,7 +124,7 @@
           "caffeine"
           #"font-hack-nerd-font"
           #"font-monaspace"
-          "gpg-suite-pinentry"
+          # "gpg-suite-pinentry"
           "httpie"
           "jetbrains-toolbox"
           "kitty"
@@ -159,25 +159,49 @@
     globalModulesMacos =  {
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
-      security.pam.enableSudoTouchIdAuth = true;
+      security.pam.services.sudo_local.touchIdAuth = true;
+    };
+    globalModulesMacosArm = {
+      # The platform the configuration will be used on.
+      nixpkgs.hostPlatform = "aarch64-darwin";
+      security.pam.services.sudo_local.touchIdAuth = true;
+      homebrew.brewPrefix = "/opt/homebrew/bin";
     };
   in
   {
-    # Build darwin flake using:
-    # $ darwin-rebuild build --flake .#aus-2226-ml
-    darwinConfigurations."aus-2226-ml" = nix-darwin.lib.darwinSystem {
-      modules = [
-        determinate.darwinModules.default
-        configuration
-        ( globalModulesMacos // ( import ./nix_modules/hosts/aus-2226-ml/configuration.nix ) )
-        home-manager.darwinModules.home-manager {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.verbose = true;
-          home-manager.users.ctoole = homeconfig;
-          home-manager.backupFileExtension = "backup";
-        }
-      ];
+    darwinConfigurations = {
+      # Build darwin flake using:
+      # $ darwin-rebuild build --flake .#aus-2226-ml
+      "aus-2226-ml" = nix-darwin.lib.darwinSystem {
+        modules = [
+          determinate.darwinModules.default
+          configuration
+          ( globalModulesMacos // ( import ./nix_modules/hosts/aus-2226-ml/configuration.nix ) )
+          home-manager.darwinModules.home-manager {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.verbose = true;
+            home-manager.users.ctoole = homeconfig;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
+      # Build darwin flake using:
+      # $ darwin-rebuild build --flake .#krakoa
+      "krakoa" = nix-darwin.lib.darwinSystem {
+        modules = [
+          configuration
+          ( globalModulesMacosArm // ( import ./nix_modules/hosts/krakoa/configuration.nix ) )
+          home-manager.darwinModules.home-manager {
+            # users.users.corntoole.home = /Users/corntoole;
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.verbose = true;
+            home-manager.users.corntoole = homeconfig;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
     };
   };
 }
