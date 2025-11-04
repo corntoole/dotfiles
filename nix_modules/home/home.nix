@@ -32,6 +32,7 @@
     ".tmux.conf".source = ../../.tmux.conf;
     ".vimrc".source = ../../.vimrc;
     ".wgetrc".source = ../../.wgetrc;
+    ".config/starship.toml".source = ../../dot_config/starship.toml;
     ".config/jj/config.toml".source = ../../dot_config/jj/config.toml;
   };
 
