@@ -252,3 +252,51 @@ function o() {
 function tre() {
 	tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
 }
+
+VGNAME=docker
+
+kill_serviced() {
+    sudo pkill -9 serviced
+    docker kill $(docker ps -q)
+}
+
+reset_thin_pool() {
+    for DEVICE in $(lsblk -ln -o NAME /dev/mapper/${VGNAME}-serviced--pool | tail -n+2); do
+        sudo umount -A /dev/mapper/${DEVICE}
+        sudo dmsetup remove /dev/mapper/${DEVICE}
+    done
+    sudo lvremove -f ${VGNAME}/serviced-pool
+    sudo lvcreate -L400G -T ${VGNAME}/serviced-pool /dev/sda1
+}
+
+cleanup() {
+    kill_serviced
+    reset_thin_pool
+}
+
+function tmux() {
+    local tmux=$(type -fp tmux)
+    case "$1" in
+        update-environment|update-env|env-update)
+            local v
+            while read v; do
+                if [[ $v == -* ]]; then
+                    unset ${v/#-/}
+                else
+                    # Add quotes around the argument
+                    v=${v/=/=\"}
+                    v=${v/%/\"}
+                    eval export $v
+                fi
+            done < <(tmux show-environment)
+            ;;
+        *)
+            $tmux "$@"
+            ;;
+    esac
+}
+
+function rebase_develop_onto_feature_branch () {
+    git checkout develop && git pull && git checkout - && git rebase develop 
+}
+
