@@ -11,6 +11,9 @@ backend = "gpg"
 ## If not set then defaults to the key associated with `user.email`
 key = "77ACE5D7"
 
+[ui]
+revsets-use-glob-by-default=true
+
 [git]
 write-change-id-header = true
 
@@ -19,7 +22,7 @@ write-change-id-header = true
 'closest_pushable(to)' = 'heads(::to & mutable() & ~description(exact:"") & (~empty() | merges()))'
 
 'user(x)' = 'author(x) | committer(x)'
-'mine()' = 'user("197863+corntoole@users.noreply.github.com") | user("ctoole@zenoss.com") | user("cornelius.toole@virtana.com")'
+'mine()' = 'user(exact:"197863+corntoole@users.noreply.github.com") | user(exact:"ctoole@zenoss.com") | user(exact:"cornelius.toole@virtana.com")'
 
 # Private and WIP commits that should never be pushed anywhere. Often part of
 # work-in-progress merge stacks.
