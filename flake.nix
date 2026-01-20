@@ -189,6 +189,21 @@
       };
       # Build darwin flake using:
       # $ darwin-rebuild build --flake .#krakoa
+      "hyperlight" = nix-darwin.lib.darwinSystem {
+        modules = [
+          configuration
+          ( globalModulesMacosArm // ( import ./nix_modules/hosts/hyperlight/configuration.nix ) )
+          home-manager.darwinModules.home-manager {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.verbose = true;
+            home-manager.users.corneliustoole = homeconfig;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
+      # Build darwin flake using:
+      # $ darwin-rebuild build --flake .#krakoa
       "krakoa" = nix-darwin.lib.darwinSystem {
         modules = [
           configuration
