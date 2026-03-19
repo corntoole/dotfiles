@@ -131,7 +131,7 @@
 
 	# https://help.github.com/articles/signing-commits-using-gpg/
 	gpgsign = true
-  #template = /Users/ctoole/.git-commit-template
+  #template = ~/.git-commit-template
 
 [diff]
 
@@ -216,7 +216,7 @@
 [http "https://go.googlesource.com"]
 	followRedirects = true
 [gpg]
-	program = /usr/local/bin/gpg
+	program = gpg
 
 [include]
   path = ~/.gitconfig.monorepo
