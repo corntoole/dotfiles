@@ -9,6 +9,7 @@
   home.packages = with pkgs; [
     pkgs.neovim
     pkgs.blesh
+    pkgs.shfmt
   ];
   home.file = {
     ".aliases".source = ../../.aliases;
