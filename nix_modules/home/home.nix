@@ -32,6 +32,7 @@
     ".tmux.conf".source = ../../.tmux.conf;
     ".vimrc".source = ../../.vimrc;
     ".wgetrc".source = ../../.wgetrc;
+    ".config/jj/config.toml".source = ../../dot_config/jj/config.toml;
   };
 
   home.sessionVariables = {
