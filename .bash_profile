@@ -85,6 +85,10 @@ if [ -d "/run/current-sytem/sw/bin" ]; then
   prepend_to_path /run/current-system/sw/bin
 fi
 
+if [ -d "${HOME}/.cargo/bin" ]; then
+  append_to_path ${HOME}/.cargo/bin
+fi
+
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
 # * ~/.extra can be used for other settings you don’t want to commit.
