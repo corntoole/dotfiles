@@ -32,3 +32,7 @@ export MANPAGER='less -X';
 export GPG_TTY=$(tty)
 
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
+export GOPRIVATE='github.com/zenoss'
+export GONOPROXY='github.com/zenoss'
+export GONOSUMDB='github.com/zenoss'

@@ -18,8 +18,10 @@
       # List packages installed in system profile. To search by name, run:
       # $ nix-env -qaP | grep wget
       environment.systemPackages =
-        [ pkgs.vim
+        [ pkgs.neovim
           pkgs.nixd
+          pkgs.tree
+          pkgs.starship
         ];
 
       # Necessary for using flakes on this system.
@@ -43,12 +45,10 @@
       };
 
       homebrew = {
-        enable = false;
+        enable = true;
 
         taps = [
           "bufbuild/buf"
-          "homebrew/bundle"
-          "homebrew/services"
           "jesseduffield/lazydocker"
           #"jorgelbg/tap"
           #"txn2/tap"
@@ -60,9 +60,9 @@
           #"atuin", restart_service: :changed
           "atuin"
           "autojump"
-          #"bash"
-          #"bash-completion@2"
-          #"bat"
+          "bash"
+          "bash-completion@2"
+          "bat"
           "cargo-binstall"
           "cfssl"
           #"cmake"
@@ -121,24 +121,24 @@
           "1password"
           "1password-cli"
           "alfred"
-          "arc"
+          #"arc"
           "caffeine"
           #"font-hack-nerd-font"
           #"font-monaspace"
           # "gpg-suite-pinentry"
-          "httpie"
-          "jetbrains-toolbox"
-          "kitty"
+          #"httpie"
+          #"jetbrains-toolbox"
+          #"kitty"
           #"libreoffice"
           "licecap"
           "logi-options+"
           "logseq"
           "mongodb-compass"
-          "orbstack"
+          #"orbstack"
           #"rancher"
           "rectangle"
           "viscosity"
-          "warp"
+          #"warp"
           "zed"
           "zoom"
         ];
@@ -183,6 +183,21 @@
             home-manager.useUserPackages = true;
             home-manager.verbose = true;
             home-manager.users.ctoole = homeconfig;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
+      # Build darwin flake using:
+      # $ darwin-rebuild build --flake .#krakoa
+      "hyperlight" = nix-darwin.lib.darwinSystem {
+        modules = [
+          configuration
+          ( globalModulesMacosArm // ( import ./nix_modules/hosts/hyperlight/configuration.nix ) )
+          home-manager.darwinModules.home-manager {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.verbose = true;
+            home-manager.users.corneliustoole = homeconfig;
             home-manager.backupFileExtension = "backup";
           }
         ];
