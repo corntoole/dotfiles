@@ -8,6 +8,7 @@
 
   home.packages = with pkgs; [
     pkgs.neovim
+    pkgs.blesh
   ];
   home.file = {
     ".aliases".source = ../../.aliases;
@@ -44,7 +45,9 @@
 
   programs.bash = {
     bashrcExtra = lib.mkDefault ''
+        [ -n "$PS1" ] && [[ $- == *i* ]] && source -- "$(blesh-share)"/ble.sh --attach=none
         [ -n "$PS1" ] && source ~/.bashrc_extra
+        [[ ! ''${BLE_VERSION-} ]] || ble-attach
     '';
   };
 }
