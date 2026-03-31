@@ -5,16 +5,18 @@ name = "Cornelius Toole"
 email = "197863+corntoole@users.noreply.github.com"
 
 [signing]
-behavior = "own"
-backend = "gpg"
+behavior = "drop"
+backend = "ssh"
 ## You can set `key` to anything accepted by `gpg -u`
 ## If not set then defaults to the key associated with `user.email`
-key = "77ACE5D7"
+#key = "77ACE5D7"
+key = "~/.ssh/id_ed25519.pub"
 
 [ui]
 revsets-use-glob-by-default=true
 
 [git]
+sign-on-push = true
 write-change-id-header = true
 
 [revset-aliases]
