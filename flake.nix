@@ -45,12 +45,10 @@
       };
 
       homebrew = {
-        enable = false;
+        enable = true;
 
         taps = [
           "bufbuild/buf"
-          "homebrew/bundle"
-          "homebrew/services"
           "jesseduffield/lazydocker"
           #"jorgelbg/tap"
           #"txn2/tap"
@@ -62,9 +60,9 @@
           #"atuin", restart_service: :changed
           "atuin"
           "autojump"
-          #"bash"
-          #"bash-completion@2"
-          #"bat"
+          "bash"
+          "bash-completion@2"
+          "bat"
           "cargo-binstall"
           "cfssl"
           #"cmake"
@@ -124,24 +122,24 @@
           "1password"
           # "1password-cli" # disabling this cask until op environment is GA'ed
           "alfred"
-          "arc"
+          #"arc"
           "caffeine"
           #"font-hack-nerd-font"
           #"font-monaspace"
           # "gpg-suite-pinentry"
-          "httpie"
-          "jetbrains-toolbox"
-          "kitty"
+          #"httpie"
+          #"jetbrains-toolbox"
+          #"kitty"
           #"libreoffice"
           "licecap"
           "logi-options+"
           "logseq"
           "mongodb-compass"
-          "orbstack"
+          #"orbstack"
           #"rancher"
           "rectangle"
           "viscosity"
-          "warp"
+          #"warp"
           "zed"
           "zoom"
         ];
