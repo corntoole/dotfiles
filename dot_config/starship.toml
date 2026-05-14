@@ -1,6 +1,11 @@
 # Get editor completions based on the config schema
 "$schema" = 'https://starship.rs/config-schema.json'
 
+[env_var.ZMX_SESSION]
+symbol = " "
+format = "[$symbol$env_value]($style) "
+description = "zmx session name"
+style = "bold magenta"
 
 # custom module for jj status
 [custom.jj]
@@ -37,7 +42,7 @@ disabled = true
 [custom.git_status]
 when = "! jj --ignore-working-copy root"
 command = "starship module git_status"
-style = "" # This disables the default "(bold green)" style
+style = ""                                                     # This disables the default "(bold green)" style
 description = "Only show git_status if we're not in a jj repo"
 
 [git_commit]

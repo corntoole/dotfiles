@@ -117,6 +117,7 @@
           "jesseduffield/lazydocker/lazydocker"
           # "jorgelbg/tap/pinentry-touchid"
           #"withgraphite/tap/graphite"
+          "neurosnap/tap/zmx"
         ];
 
         casks = [
