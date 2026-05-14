@@ -122,7 +122,7 @@
 
         casks = [
           "1password"
-          "1password-cli"
+          # "1password-cli" # disabling this cask until op environment is GA'ed
           "alfred"
           "arc"
           "caffeine"
