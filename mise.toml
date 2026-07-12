@@ -1,0 +1,2 @@
+[tools]
+"nix:nixd" = "latest"
