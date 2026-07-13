@@ -42,6 +42,7 @@ in
     ".config/starship.toml".source = ../../dot_config/starship.toml;
     ".config/jj/config.toml".source = ../../dot_config/jj/config.toml;
     ".config/nvim".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/dot_config/nvim";
+    ".config/lazyvim".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/dot_config/lazyvim";
   };
 
   home.sessionVariables = {

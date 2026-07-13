@@ -360,3 +360,7 @@ attach_and_run() {
     --volume $PWD:/workspace:rw --volume /var/run/docker.sock:/var/run/docker.sock \
     --env LOCAL_USER_ID=$(id -g) --workdir /workspace test "$@"
 }
+
+lazyvim() {
+        NVIM_APPNAME=lazyvim nvim "$@"
+}
