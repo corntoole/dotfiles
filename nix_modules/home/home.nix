@@ -1,4 +1,9 @@
-{ lib, pkgs, ...}:
+{ config, lib, pkgs, ...}:
+
+let
+  dotfiles = "${config.home.homeDirectory}/.dotfiles";
+in
+
 {
   # this is internal compatibility configuration
   # for home-manager, don't change this!
@@ -36,6 +41,7 @@
     ".wgetrc".source = ../../.wgetrc;
     ".config/starship.toml".source = ../../dot_config/starship.toml;
     ".config/jj/config.toml".source = ../../dot_config/jj/config.toml;
+    ".config/nvim".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/dot_config/nvim";
   };
 
   home.sessionVariables = {
