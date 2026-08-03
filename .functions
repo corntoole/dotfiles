@@ -356,9 +356,101 @@ function dotfiles () {
 }
 
 attach_and_run() {
-  docker compose -f docker-compose.test.yml run --rm \
-    --volume $PWD:/workspace:rw --volume /var/run/docker.sock:/var/run/docker.sock \
-    --env LOCAL_USER_ID=$(id -g) --workdir /workspace test "$@"
+  dcrun "$@"
+}
+
+# Run commands inside a devcontainer-style docker compose service.
+#
+# Usage:
+#   dcrun [options] [--] [command [args...]]
+#
+# Options:
+#   -d, --dir <path>           Source directory to mount at /workspace (default: $PWD)
+#   -f, --compose-file <file>  Compose file (repeatable).
+#                              Defaults to: docker-compose.yml + docker-compose.test.yml
+#   -s, --service <name>       Target service (default: test)
+#   -h, --help                 Show usage
+#
+# Examples:
+#   dcrun bash
+#   dcrun go test ./...
+#   dcrun -s app -f docker-compose.yml -- npm test
+#   dcrun -d ~/src/myproj -- make lint
+dcrun() {
+  local source_dir="$PWD"
+  local service="test"
+  local compose_files=()
+  local custom_compose_files=0
+
+  [[ -f "docker-compose.yml" ]] && compose_files+=("docker-compose.yml")
+  [[ -f "docker-compose.test.yml" ]] && compose_files+=("docker-compose.test.yml")
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -d|--dir)
+        source_dir="$2"
+        shift 2
+        ;;
+      -s|--service)
+        service="$2"
+        shift 2
+        ;;
+      -f|--compose-file)
+        if [[ $custom_compose_files -eq 0 ]]; then
+          compose_files=()
+          custom_compose_files=1
+        fi
+        [[ -f "$2" ]] && compose_files+=("$2")
+        shift 2
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -h|--help)
+        cat <<'EOF'
+Usage: dcrun [options] [--] [command [args...]]
+
+Run a command in a docker compose service with the source directory mounted
+as /workspace and set as the working directory.
+
+Options:
+  -d, --dir <path>           Source directory to mount (default: current dir)
+  -f, --compose-file <file>  Compose file (repeatable)
+                             Defaults: docker-compose.yml + docker-compose.test.yml
+  -s, --service <name>       Target service (default: test)
+  -h, --help                 Show this help
+
+Examples:
+  dcrun bash
+  dcrun go test ./...
+  dcrun -s app -f docker-compose.yml -- npm test
+  dcrun -d ~/src/myproj -- make lint
+EOF
+        return 0
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  local compose_args=()
+  local file
+  for file in "${compose_files[@]}"; do
+    compose_args+=( -f "$file" )
+  done
+
+  if [[ $# -eq 0 ]]; then
+    set -- bash
+  fi
+
+  docker compose --progress=quiet "${compose_args[@]}" run --rm \
+    --volume "${source_dir}:/workspace:rw" \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --env "LOCAL_USER_ID=$(id -u)" \
+    --workdir /workspace \
+    "$service" "$@"
 }
 
 lazyvim() {
