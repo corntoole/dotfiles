@@ -22,6 +22,12 @@
           pkgs.nixd
           pkgs.tree
           pkgs.starship
+          pkgs.bat
+          pkgs.eza
+          pkgs.fzf
+          pkgs.jujutsu
+          pkgs.ripgrep
+          pkgs.zoxide
         ];
 
       # Necessary for using flakes on this system.
@@ -160,6 +166,7 @@
       };
     };
     homeconfig = import ./nix_modules/home/home.nix;
+    nixosVmHostname = "nixos-vm";
     globalModulesMacos =  {
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "x86_64-darwin";
@@ -170,6 +177,10 @@
       nixpkgs.hostPlatform = "aarch64-darwin";
       security.pam.services.sudo_local.touchIdAuth = true;
       homebrew.brewPrefix = "/opt/homebrew/bin";
+    };
+    globalModulesLinuxAarch64 = {
+      # The platform the configuration will be used on.
+      nixpkgs.hostPlatform = "aarch64-linux";
     };
   in
   {
@@ -217,6 +228,26 @@
             home-manager.useUserPackages = true;
             home-manager.verbose = true;
             home-manager.users.corntoole = homeconfig;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
+    };
+
+    nixosConfigurations = {
+      # Build NixOS flake using:
+      # $ nixos-rebuild switch --flake .#nixos-vm
+      "${nixosVmHostname}" = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        modules = [
+          ({ ... }: { networking.hostName = nixosVmHostname; })
+          globalModulesLinuxAarch64
+          (import ./nix_modules/hosts/nixos-vm/configuration.nix)
+          home-manager.nixosModules.home-manager {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.verbose = true;
+            home-manager.users.corneliustoole = homeconfig;
             home-manager.backupFileExtension = "backup";
           }
         ];
