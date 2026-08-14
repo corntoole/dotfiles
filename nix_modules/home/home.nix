@@ -58,4 +58,15 @@ in
         [[ ! ''${BLE_VERSION-} ]] || ble-attach
     '';
   };
+
+  programs.ssh = {
+    enable = true;
+    matchBlocks = {
+      "github.com" = {
+        user = "git";
+        identityFile = [ "~/.ssh/id_vm_ed25519" "~/.ssh/id_ed25519" ];
+        identitiesOnly = true;
+      };
+    };
+  };
 }
