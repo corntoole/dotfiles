@@ -151,3 +151,8 @@ restack = [
   "roots(trunk()..) & mutable()",
   "--simplify-parents",
 ]
+
+[[--scope]]
+--when.hostnames = ["nixos-vm"]
+[--scope.signing]
+key = "~/.ssh/id_vm_ed25519.pub"
