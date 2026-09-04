@@ -222,5 +222,24 @@
         ];
       };
     };
+    nixosConfigurations = {
+      # Build nixos flake using:
+      # $ sudo nixos-rebuild switch --flake .#aus-1271
+      "aus-1271" = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./nix_modules/hosts/aus-1271/configuration.nix
+          ./nix_modules/hosts/aus-1271/hardware-configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.verbose = true;
+            home-manager.users.ctoole = homeconfig;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
+    };
   };
 }
