@@ -6,6 +6,8 @@
   boot.loader.grub.efiSupport = false;
 
   boot.initrd.services.lvm.enable = true;
+  # Required for the vg0/vmpool LVM thin pool (VM/container storage) to activate.
+  boot.kernelModules = [ "dm-thin-pool" ];
 
   networking.hostName = "aus-1271";
   networking.networkmanager.enable = true;
@@ -51,6 +53,7 @@
     curl
     wget
     gnupg
+    thin-provisioning-tools
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
