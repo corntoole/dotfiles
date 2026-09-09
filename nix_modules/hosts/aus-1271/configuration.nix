@@ -4,8 +4,6 @@
 
 { config, lib, pkgs, ... }:
 {
-  # Hostname (keep the same for this machine)
-  networking.hostName = "aus-1271";
 
   # User-level packages (mirrors the NixOS config)
   # These are now home-manager packages, not system packages
