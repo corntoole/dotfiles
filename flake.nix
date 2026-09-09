@@ -78,6 +78,7 @@
           "git-branchless"
           #"gitui"
           #"glow"
+
           "gnutls"
           "gnupg"
           #"go"
@@ -108,7 +109,6 @@
           #"stgit"
           #"tree"
           #"wget"
-          #"yarn"
           #"yq"
           "zellij"
           #"bradleyjkemp/formulae/grpc-tools"
@@ -222,14 +222,19 @@
         ];
       };
     };
+
+    # ---------------------------------------------------------------------------
+    # NixOS configurations (renamed for clarity)
+    # ---------------------------------------------------------------------------
     nixosConfigurations = {
       # Build nixos flake using:
-      # $ sudo nixos-rebuild switch --flake .#aus-1271
-      "aus-1271" = nixpkgs.lib.nixosSystem {
+      # $ sudo nixos-rebuild switch --flake .#aus-1271-nixos
+      "aus-1271-nixos" = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          ./nix_modules/hosts/aus-1271/configuration.nix
-          ./nix_modules/hosts/aus-1271/hardware-configuration.nix
+          ./nix_modules/common/nixos-base.nix
+          ./nix_modules/hosts/aus-1271-nixos/configuration.nix
+          ./nix_modules/hosts/aus-1271-nixos/hardware-configuration.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -238,6 +243,21 @@
             home-manager.users.ctoole = homeconfig;
             home-manager.backupFileExtension = "backup";
           }
+        ];
+      };
+    };
+
+    # ---------------------------------------------------------------------------
+    # Home-manager configurations (active profiles for non-NixOS hosts)
+    # ---------------------------------------------------------------------------
+    homeConfigurations = {
+      # Build home-manager flake using:
+      # $ home-manager switch --flake .#aus-1271
+      "aus-1271" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        modules = [
+          ./nix_modules/hosts/aus-1271-ubuntu/configuration.nix
+          homeconfig
         ];
       };
     };

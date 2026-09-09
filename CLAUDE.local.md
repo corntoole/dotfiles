@@ -1,0 +1,3 @@
+# Instructions
+
+@AGENTS.local.md
