@@ -56,10 +56,17 @@ apt-get install -y \
     ca-certificates \
     curl \
     gnupg \
+    locales \
     software-properties-common \
     docker.io \
     libvirt-daemon-system \
     virt-manager
+
+echo ""
+echo "=== Configuring locale ==="
+
+locale-gen en_US.UTF-8
+update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 echo ""
 echo "=== Enabling systemd services ==="
@@ -91,13 +98,23 @@ echo "=== Step 3: Applying home-manager configuration ==="
 USERNAME="ctoole"
 if ! id "$USERNAME" >/dev/null 2>&1; then
     echo "User $USERNAME does not exist. Creating..."
-    useradd -m -s /bin/bash -G docker,libvirtd "$USERNAME"
+    useradd -m -s /bin/bash "$USERNAME"
     echo "Please set a password for $USERNAME:"
     passwd "$USERNAME"
 fi
 
-# Apply home-manager config as the user
-su - "$USERNAME" -c "home-manager switch --flake $(dirname "$0")/..#aus-1271"
+# Ensure user is in required groups (idempotent)
+usermod -aG docker,libvirtd "$USERNAME" || true
+
+# Resolve dotfiles path robustly (handles symlinks and relative paths)
+SCRIPT_PATH="$(readlink -f "$0")"
+DOTFILES_PATH="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+
+# Apply home-manager config as the user via nix run (works even before home-manager is installed)
+echo ""
+echo "=== Applying home-manager configuration ==="
+echo "Flake path: $DOTFILES_PATH"
+su - "$USERNAME" -c "nix run github:nix-community/home-manager -- switch --flake '$DOTFILES_PATH'#aus-1271"
 
 echo ""
 echo "=== Provisioning complete ==="
