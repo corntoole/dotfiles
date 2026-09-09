@@ -1,7 +1,13 @@
 [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
 
-#Autojump
-[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+# Autojump
+if [ -n "$(which brew 2>/dev/null)" ]; then
+  [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+elif [ -f /usr/share/autojump/autojump.sh ]; then
+  . /usr/share/autojump/autojump.sh
+elif [ -f /etc/profile.d/autojump.sh ]; then
+  . /etc/profile.d/autojump.sh
+fi
 
 #NVM
 # export NVM_DIR="$HOME/.nvm"

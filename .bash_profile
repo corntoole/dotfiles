@@ -54,15 +54,9 @@ fi
 # --- Output and Conclusion ---
 
 if [ -n "$BREW_CMD" ]; then
-  # To make the variable available in the calling shell,
-  # you would typically 'source' this script, or the
-  # variable assignment would be done in your shell's
-  # profile script (e.g., .bashrc, .zshrc).
   eval "$(${BREW_CMD} shellenv)"
   unset BREW_CMD
-else
-  echo "❌ Homebrew command 'brew' was not found in common locations or in the PATH."
-  echo "Homebrew was not initialized"
+# else: silently skip on non-macOS hosts (e.g., Ubuntu with Nix)
 fi
 
 # add /usr/local/bin to PATH if it's not already there
@@ -132,8 +126,17 @@ complete -W "NSGlobalDomain" defaults
 # Add `killall` tab completion for common apps
 complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall
 
-#Autojump
-[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+# Autojump
+if [ -n "$(which brew 2>/dev/null)" ]; then
+  # Homebrew path (macOS / Linuxbrew)
+  [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+elif [ -f /usr/share/autojump/autojump.sh ]; then
+  # Debian/Ubuntu apt path
+  . /usr/share/autojump/autojump.sh
+elif [ -f /etc/profile.d/autojump.sh ]; then
+  # Generic system path
+  . /etc/profile.d/autojump.sh
+fi
 
 # TODO: factor out env var for gcloud SDK root
 # The next line updates PATH for the Google Cloud SDK.
