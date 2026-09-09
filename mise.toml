@@ -1,0 +1,7 @@
+[tools]
+"nix:jujutsu" = "latest"
+"nix:jjui" = "latest"
+"nix:git" = "latest"
+"nix:helix" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+node = "latest"
