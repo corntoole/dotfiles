@@ -1,4 +1,4 @@
-{ config, pkgs, modulesPath, ... }:
+{ config, lib, pkgs, modulesPath, ... }:
 
 {
   imports = [
@@ -102,6 +102,13 @@
     options = "--delete-older-than 7d";
   };
   nix.settings.auto-optimise-store = true;
+
+  home-manager.users.corneliustoole = {
+    programs.ssh.matchBlocks."github.com".identityFile = lib.mkForce [
+      "~/.ssh/id_vm_ed25519"
+      "~/.ssh/id_ed25519"
+    ];
+  };
 
   system.stateVersion = "25.11";
 }

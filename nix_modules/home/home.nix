@@ -64,7 +64,7 @@ in
     matchBlocks = {
       "github.com" = {
         user = "git";
-        identityFile = [ "~/.ssh/id_vm_ed25519" "~/.ssh/id_ed25519" ];
+        identityFile = lib.mkDefault [ "~/.ssh/id_ed25519" ];
         identitiesOnly = true;
       };
     };
