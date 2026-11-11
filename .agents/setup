@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# Amp orb setup for this dotfiles repository.
+#
+# Fresh orbs only need shell validation tools and jj; Nix is preinstalled in
+# the orb base template. This must stay fast (target: under 2 minutes),
+# idempotent, and free of long-lived processes — see .agents/resume for what
+# runs on orb wake.
+#
+set -euo pipefail
+
+log() { printf '[setup] %s\n' "$*"; }
+step() {
+  local name="$1"
+  shift
+  local start=$SECONDS
+  log "start: $name"
+  "$@"
+  log "done:  $name ($((SECONDS - start))s)"
+}
+
+# 1. Lint and format tools for the shell dotfiles (.functions, .aliases, bin/).
+install_shell_tools() {
+  if command -v shellcheck >/dev/null && command -v shfmt >/dev/null; then
+    log "shellcheck and shfmt already present"
+    return 0
+  fi
+  sudo apt-get update -qq
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq shellcheck shfmt
+}
+
+# 2. jj (Jujutsu) — pinned static musl binary; the repository's jj config
+#    tooling (jj mega-*) is written against this version.
+JJ_VERSION=0.47.1
+install_jj() {
+  if command -v jj >/dev/null; then
+    log "jj already present at $(command -v jj): $(jj --version 2>/dev/null || true); leaving it alone"
+    return 0
+  fi
+  local tmp
+  tmp="$(mktemp -d)"
+  log "downloading jj v${JJ_VERSION} (static musl binary)"
+  curl -fsSL --max-time 240 \
+    -o "$tmp/jj.tgz" \
+    "https://github.com/jj-vcs/jj/releases/download/v${JJ_VERSION}/jj-v${JJ_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+  tar -xzf "$tmp/jj.tgz" -C "$tmp"
+  sudo install -m 0755 "$tmp/jj" /usr/local/bin/jj
+  rm -rf "$tmp"
+}
+
+# 3. Nix is preinstalled in the orb base template (per-user profile wired into
+#    /etc/profile.d/nix.sh), so login shells see it. Verify rather than install.
+#    Flake inputs are NOT prefetched here: downloading nixpkgs would blow the
+#    setup time budget. They fetch once on first `nix eval`/`nix flake check`.
+verify_environment() {
+  /bin/bash -lc '
+    set -e
+    for tool in jj shellcheck shfmt nix; do command -v "$tool" >/dev/null; done
+    jj --version
+    shellcheck --version | sed -n 2p
+    printf "shfmt %s\n" "$(shfmt --version)"
+    nix --version
+  '
+  log "all tools resolve in a clean login shell"
+}
+
+step "apt packages (shellcheck, shfmt)" install_shell_tools
+step "jj ${JJ_VERSION}" install_jj
+step "verify login-shell environment" verify_environment
+log "setup complete"

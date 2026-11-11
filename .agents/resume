@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#
+# Amp orb resume for this dotfiles repository.
+#
+# Runs on initial activation and every orb wake, with a 10-second budget.
+# Health checks only — all installation happens in .agents/setup.
+#
+set -euo pipefail
+
+# nix lives in a per-user profile exposed through /etc/profile.d, which
+# non-login shells do not read.
+# shellcheck disable=SC1091
+[ -f /etc/profile.d/nix.sh ] && . /etc/profile.d/nix.sh || true
+
+missing=""
+for tool in jj shellcheck shfmt nix; do
+  command -v "$tool" >/dev/null || missing="$missing $tool"
+done
+if [ -n "$missing" ]; then
+  echo "[resume] missing tools:${missing} — run .agents/setup" >&2
+  exit 1
+fi
+
+nix store ping >/dev/null 2>&1 || echo "[resume] warning: nix store unreachable" >&2
+echo "[resume] environment OK"

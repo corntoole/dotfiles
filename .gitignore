@@ -15,6 +15,9 @@ Thumbs.db
 .Spotlight-V100
 .Trashes
 
+### Amp (orb-local files: thread artifacts, portal URLs) ###
+.amp/
+
 .env.local
 
 
