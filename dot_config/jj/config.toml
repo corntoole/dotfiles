@@ -57,6 +57,27 @@ write-change-id-header = true
 # Returns the closest merge commit to `to`
 "closest_merge(to)" = "heads(::to & merges())"
 
+# All workspace working-copy commits except the primary integration workspace.
+'agent_wcs()' = 'working_copies() ~ default@'
+
+# The commit agent workspaces branch from and the megamerge merges onto.
+# Override per repo if you integrate on something other than trunk().
+'megamerge_base()' = 'trunk()'
+
+# Agent workspaces with work in progress (empty buffer commits on top of work
+# count as active: they are the targets for jj absorb and jj mega-fix).
+'active_agents()' = 'agent_wcs() ~ idle_agents()'
+
+# Agent workspace working copies that sit directly on the base with nothing in
+# them: candidates for jj mega-prune.
+'idle_agents()' = 'agent_wcs() & empty() & megamerge_base()+'
+
+# Locate the mutable megamerge commit by exact description ("megamerge").
+'megamerge()' = 'description(exact:"megamerge\n") & mutable()'
+
+# The megamerge commit and the agent heads it merges (everything but the base).
+'agents_of_megamerge()' = 'megamerge() | (megamerge()- ~ megamerge_base())'
+
 [aliases]
 # via andre.arko.net's JJCon talk, Stupid JJ Tricks
 init = ["util", "exec", "--", "bash", "-c", """
@@ -151,6 +172,122 @@ restack = [
   "roots(trunk()..) & mutable()",
   "--simplify-parents",
 ]
+
+# Create a new agent workspace as a sibling of the current one:
+#   jj mega-new <name> [base-revset]
+mega-new = ["util", "exec", "--", "bash", "-c", '''
+set -euo pipefail
+jj workspace update-stale >/dev/null 2>&1 || true
+if [ $# -lt 1 ]; then
+  echo "usage: jj mega-new <name> [base-revset]" >&2
+  exit 1
+fi
+name="$1"
+shift
+base="${1:-megamerge_base()}"
+root="$(jj workspace root)"
+dir="$(dirname "$root")"
+if [ -e "$dir/$name" ]; then
+  echo "error: $dir/$name already exists" >&2
+  exit 1
+fi
+jj workspace add -r "$base" "$dir/$name"
+echo "Agent workspace '$name' created at $dir/$name."
+echo "Start agents there with: cd $dir/$name && jj describe -m '<task>'"
+''', ""]
+
+# Push the changes sitting in default@'s working copy into a specific agent
+# workspace's commit (line-level fixes to lines that agent touched):
+#   jj mega-fix <workspace-name>
+mega-fix = ["util", "exec", "--", "bash", "-c", '''
+set -euo pipefail
+jj workspace update-stale >/dev/null 2>&1 || true
+if [ $# -lt 1 ]; then
+  echo "usage: jj mega-fix <workspace-name>" >&2
+  exit 1
+fi
+ws="$1"
+root="$(jj workspace list -T 'name ++ "\t" ++ root ++ "\n"' | awk -F'\t' -v n="$ws" '$1 == n { print $2 }')"
+if [ -z "$root" ] || [ ! -d "$root" ]; then
+  echo "error: no workspace '$ws' with a directory on disk" >&2
+  exit 1
+fi
+jj -R "$root" workspace update-stale >/dev/null 2>&1 || true
+target="$(jj -R "$root" log -r '@' --no-graph -T 'change_id')"
+jj squash --into "$target"
+echo "Pushed default@ changes into workspace '$ws' ($root)."
+echo "The agent should run: jj workspace update-stale"
+''', ""]
+
+# Snapshot all agent workspaces, update/create the megamerge, and position
+# default@ on top of it.
+mega-sync = ["util", "exec", "--", "bash", "-c", '''
+set -euo pipefail
+jj workspace update-stale >/dev/null 2>&1 || true
+
+# Snapshot every agent workspace so disk edits are recorded
+# (update-stale also snapshots; a bare status would fail on stale workspaces).
+jj workspace list -T 'name ++ "\t" ++ root ++ "\n"' | while IFS=$'\t' read -r name root; do
+  if [ "$name" != "default" ] && [ -d "$root" ]; then
+    jj -R "$root" workspace update-stale >/dev/null 2>&1 || true
+  fi
+done
+
+# Rebase or create the megamerge commit across all active agent heads + base
+if [ -n "$(jj log -r 'megamerge()' --no-graph -T 'commit_id')" ]; then
+  jj rebase -r 'megamerge()' -d 'active_agents() | megamerge_base()' --simplify-parents
+else
+  jj new 'active_agents() | megamerge_base()' -m "megamerge"
+fi
+
+# Keep default@ as an empty integration working copy on top of the megamerge
+jj new 'megamerge()'
+
+if [ -n "$(jj log -r 'megamerge() & conflicts()' --no-graph -T 'commit_id')" ]; then
+  echo "Megamerge has conflicts. Fix the files in this workspace, then run: jj squash"
+fi
+''']
+
+# Show which agent workspaces are active vs idle, and report merge conflicts.
+mega-status = ["util", "exec", "--", "bash", "-c", '''
+set -euo pipefail
+jj workspace update-stale >/dev/null 2>&1 || true
+echo "=== Active Agent Workspaces ==="
+jj log -r 'active_agents()' --no-graph -T 'working_copies ++ "  " ++ change_id.short() ++ "  " ++ description.first_line() ++ "\n"'
+echo ""
+echo "=== Idle Agent Workspaces (empty on the base) ==="
+jj log -r 'idle_agents()' --no-graph -T 'working_copies ++ "  " ++ change_id.short() ++ "\n"'
+echo ""
+echo "=== Megamerge ==="
+if [ -z "$(jj log -r 'megamerge()' --no-graph -T 'commit_id')" ]; then
+  echo "No megamerge commit yet. Run: jj mega-sync"
+else
+  jj log -r 'agents_of_megamerge()' --no-graph -T 'if(conflict, "!! CONFLICT: ", "   ") ++ change_id.short() ++ "  " ++ description.first_line() ++ "\n"'
+fi
+''']
+
+# Forget idle workspaces (empty commits on the base) and workspaces whose
+# directories no longer exist on disk.
+mega-prune = ["util", "exec", "--", "bash", "-c", '''
+set -euo pipefail
+jj workspace update-stale >/dev/null 2>&1 || true
+
+# Forget any workspace whose working copy is an empty commit directly on the base
+jj log -r 'idle_agents()' --no-graph -T 'working_copies ++ "\n"' | tr ' ,@' '\n\n\n' | while read -r ws; do
+  if [ -n "$ws" ] && [ "$ws" != "default" ]; then
+    echo "Forgetting idle workspace: $ws"
+    jj workspace forget "$ws"
+  fi
+done
+
+# Also forget any workspace whose root directory no longer exists on disk
+jj workspace list -T 'name ++ "\t" ++ root ++ "\n"' | while IFS=$'\t' read -r name root; do
+  if [ "$name" != "default" ] && [ ! -d "$root" ]; then
+    echo "Forgetting missing-directory workspace: $name ($root)"
+    jj workspace forget "$name"
+  fi
+done
+''']
 
 [[--scope]]
 --when.hostnames = ["nixos-vm"]
