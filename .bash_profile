@@ -81,7 +81,7 @@ if [ -d "${HOME}/Zing/bin" ]; then
   export GOPATH=${HOME}/Zing
 fi
 
-if [ -d "/run/current-sytem/sw/bin" ]; then
+if [ -d "/run/current-system/sw/bin" ]; then
   prepend_to_path /run/current-system/sw/bin
 fi
 
