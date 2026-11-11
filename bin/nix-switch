@@ -1,0 +1,275 @@
+#!/usr/bin/env bash
+#
+# nix-switch: Safe, friction-free wrapper for darwin-rebuild / nixos-rebuild.
+#
+# Handles common Nix flake friction points:
+#  1. Untracked Git files ignored by Nix flakes (warns / stages with git add -N)
+#  2. Hostname auto-detection (krakoa, hyperlight, aus-2226-ml, nixos-vm)
+#  3. Missing tool detection (finds darwin-rebuild in /run/current-system/sw/bin if not in PATH)
+#  4. Pre-flight and post-flight SSH identity checks (prevents "no such identity" warnings)
+#  5. Build-first safety checks before applying system switch
+#
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ACTION="switch"
+TARGET_HOST=""
+DRY_RUN=false
+VERBOSE=false
+AUTO_STAGE=false
+
+# Known hosts defined in flake.nix
+DARWIN_HOSTS=("krakoa" "hyperlight" "aus-2226-ml")
+NIXOS_HOSTS=("nixos-vm")
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS] [ACTION] [HOST]
+
+Actions:
+  switch     Build and activate configuration (default)
+  build      Build system derivation only without activating
+  check      Evaluate flake and dry-run build
+  verify     Run pre/post-flight identity and configuration diagnostics only
+
+Options:
+  -n, --dry-run        Alias for 'check' (do not activate)
+  -a, --auto-stage     Automatically 'git add -N' untracked .nix and config files
+  -v, --verbose        Enable verbose rebuild output
+  -h, --help           Show this help message
+
+Examples:
+  $(basename "$0")                   # Auto-detects host and switches
+  $(basename "$0") check             # Verifies flake and builds dry-run
+  $(basename "$0") switch krakoa     # Explicitly switch krakoa
+  $(basename "$0") verify            # Checks SSH keys and config sanity
+EOF
+  exit 0
+}
+
+# Parse options and arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      ;;
+    -n|--dry-run)
+      ACTION="check"
+      shift
+      ;;
+    -a|--auto-stage)
+      AUTO_STAGE=true
+      shift
+      ;;
+    -v|--verbose)
+      VERBOSE=true
+      shift
+      ;;
+    switch|build|check|verify)
+      ACTION="$1"
+      shift
+      ;;
+    *)
+      if [[ -z "$TARGET_HOST" ]]; then
+        TARGET_HOST="$1"
+        shift
+      else
+        echo "Error: Unknown argument '$1'" >&2
+        usage
+      fi
+      ;;
+  esac
+done
+
+cd "$SCRIPT_DIR"
+
+log_info() { printf "\033[1;34m==>\033[0m \033[1m%s\033[0m\n" "$*"; }
+log_warn() { printf "\033[1;33mwarning:\033[0m %s\n" "$*" >&2; }
+log_err()  { printf "\033[1;31merror:\033[0m %s\n" "$*" >&2; }
+log_ok()   { printf "\033[1;32m✓\033[0m %s\n" "$*"; }
+
+# 1. Detect Hostname
+if [[ -z "$TARGET_HOST" ]]; then
+  DETECTED_HOST="$(hostname -s)"
+  for h in "${DARWIN_HOSTS[@]}" "${NIXOS_HOSTS[@]}"; do
+    if [[ "$DETECTED_HOST" == "$h" ]]; then
+      TARGET_HOST="$h"
+      break
+    fi
+  done
+  if [[ -z "$TARGET_HOST" ]]; then
+    log_warn "Host '$DETECTED_HOST' not directly recognized in flake.nix."
+    echo "Available Darwin hosts: ${DARWIN_HOSTS[*]}"
+    echo "Available NixOS hosts:  ${NIXOS_HOSTS[*]}"
+    read -r -p "Enter target host: " TARGET_HOST
+  fi
+fi
+
+log_info "Target host: $TARGET_HOST (Action: $ACTION)"
+
+# 2. Determine OS & Rebuild Command
+OS="$(uname -s)"
+REBUILD_BIN=""
+IS_DARWIN=false
+
+if [[ "$OS" == "Darwin" ]]; then
+  IS_DARWIN=true
+  if command -v darwin-rebuild >/dev/null 2>&1; then
+    REBUILD_BIN="darwin-rebuild"
+  elif [[ -x "/run/current-system/sw/bin/darwin-rebuild" ]]; then
+    REBUILD_BIN="/run/current-system/sw/bin/darwin-rebuild"
+  elif [[ -x "$HOME/.nix-profile/bin/darwin-rebuild" ]]; then
+    REBUILD_BIN="$HOME/.nix-profile/bin/darwin-rebuild"
+  fi
+elif [[ "$OS" == "Linux" ]]; then
+  if command -v nixos-rebuild >/dev/null 2>&1; then
+    REBUILD_BIN="nixos-rebuild"
+  elif [[ -x "/run/current-system/sw/bin/nixos-rebuild" ]]; then
+    REBUILD_BIN="/run/current-system/sw/bin/nixos-rebuild"
+  fi
+fi
+
+if [[ "$ACTION" != "verify" && -z "$REBUILD_BIN" ]]; then
+  log_err "Rebuild tool (darwin-rebuild / nixos-rebuild) not found in PATH or /run/current-system/sw/bin."
+  exit 1
+fi
+
+# 3. Check for Darwin /etc non-symlink collisions
+check_darwin_etc() {
+  if [[ "$IS_DARWIN" == true ]]; then
+    local etc_conflicts=()
+    for f in /etc/zshrc /etc/zprofile /etc/bashrc; do
+      if [[ -f "$f" && ! -L "$f" ]]; then
+        etc_conflicts+=("$f")
+      fi
+    done
+    if [[ ${#etc_conflicts[@]} -gt 0 ]]; then
+      log_warn "nix-darwin requires backing up existing non-symlink files in /etc:"
+      for f in "${etc_conflicts[@]}"; do
+        echo "   sudo mv $f ${f}.before-nix-darwin"
+      done
+    fi
+  fi
+}
+
+# 4. Check for Untracked Files in Git (Flake Blindspot)
+check_git_untracked() {
+  log_info "Checking for untracked files in git..."
+  local untracked
+  untracked="$(git status --porcelain 2>/dev/null | grep '^??' | awk '{print $2}' || true)"
+  if [[ -n "$untracked" ]]; then
+    local nix_untracked=()
+    while IFS= read -r f; do
+      if [[ "$f" =~ \.nix$ || "$f" =~ ^dot_config/ || "$f" =~ ^nix_modules/ ]]; then
+        nix_untracked+=("$f")
+      fi
+    done <<< "$untracked"
+
+    if [[ ${#nix_untracked[@]} -gt 0 ]]; then
+      log_warn "Nix Flakes ignores files not tracked by Git. Found untracked files:"
+      for f in "${nix_untracked[@]}"; do
+        echo "   - $f"
+      done
+      if [[ "$AUTO_STAGE" == true ]]; then
+        log_info "Auto-staging untracked files with 'git add -N'..."
+        git add -N "${nix_untracked[@]}"
+      else
+        log_warn "Run 'git add -N <file>' or pass '-a' so Nix can see them."
+      fi
+    fi
+  else
+    log_ok "All files tracked by git."
+  fi
+}
+
+# 4. Check SSH Identity Configuration
+check_ssh_identities() {
+  log_info "Checking SSH identity files..."
+  local ssh_config="$HOME/.ssh/config"
+  if [[ -f "$ssh_config" ]]; then
+    # Parse IdentityFile lines from ssh config
+    local missing_keys=()
+    while IFS= read -r line; do
+      local key_path
+      key_path="$(echo "$line" | awk '{$1=""; print $0}' | sed -e 's/^[[:space:]]*//' -e "s|^~|$HOME|")"
+      if [[ -n "$key_path" && ! -f "$key_path" ]]; then
+        missing_keys+=("$key_path")
+      fi
+    done < <(grep -E '^[[:space:]]*IdentityFile[[:space:]]+' "$ssh_config" 2>/dev/null || true)
+
+    if [[ ${#missing_keys[@]} -gt 0 ]]; then
+      log_warn "Configured IdentityFiles in $ssh_config missing on this host:"
+      for k in "${missing_keys[@]}"; do
+        echo "   - $k"
+      done
+      log_warn "These will produce 'no such identity' warnings during SSH/git operations."
+    else
+      log_ok "All SSH identity files in ~/.ssh/config exist on disk."
+    fi
+  fi
+
+  # Test git SSH resolution
+  log_info "Testing SSH resolution for github.com..."
+  local ssh_test
+  if ssh_test="$(ssh -G github.com 2>/dev/null)"; then
+    local id_files
+    id_files="$(echo "$ssh_test" | grep '^identityfile ' | awk '{print $2}' | sed "s|^~|$HOME|")"
+    while IFS= read -r key; do
+      if [[ -n "$key" && ! -f "$key" ]]; then
+        log_warn "SSH github.com target lists missing identity: $key"
+      fi
+    done <<< "$id_files"
+  fi
+}
+
+check_darwin_etc
+check_git_untracked
+check_ssh_identities
+
+if [[ "$ACTION" == "verify" ]]; then
+  log_ok "Verification complete."
+  exit 0
+fi
+
+# 5. Build / Switch
+CMD=()
+if [[ "$IS_DARWIN" == true ]]; then
+  case "$ACTION" in
+    switch)
+      CMD=("$REBUILD_BIN" "switch" "--flake" ".#${TARGET_HOST}")
+      ;;
+    build)
+      CMD=("$REBUILD_BIN" "build" "--flake" ".#${TARGET_HOST}")
+      ;;
+    check)
+      CMD=("$REBUILD_BIN" "check" "--flake" ".#${TARGET_HOST}")
+      ;;
+  esac
+else
+  case "$ACTION" in
+    switch)
+      CMD=("sudo" "$REBUILD_BIN" "switch" "--flake" ".#${TARGET_HOST}")
+      ;;
+    build)
+      CMD=("$REBUILD_BIN" "build" "--flake" ".#${TARGET_HOST}")
+      ;;
+    check)
+      CMD=("$REBUILD_BIN" "dry-build" "--flake" ".#${TARGET_HOST}")
+      ;;
+  esac
+fi
+
+if [[ "$VERBOSE" == true ]]; then
+  CMD+=("--show-trace" "-v")
+fi
+
+log_info "Running: ${CMD[*]}"
+"${CMD[@]}"
+
+# 6. Post-Flight Verification
+if [[ "$ACTION" == "switch" ]]; then
+  log_info "Running post-switch diagnostics..."
+  check_ssh_identities
+  log_ok "Switch completed successfully!"
+fi
